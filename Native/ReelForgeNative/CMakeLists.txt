@@ -10,4 +10,6 @@ target_link_libraries(ReelForgeNative PRIVATE comctl32 gdiplus shlwapi winmm)
 
 if(MSVC)
   target_compile_options(ReelForgeNative PRIVATE /W4 /EHsc)
+elseif(MINGW)
+  target_link_options(ReelForgeNative PRIVATE -municode)
 endif()
