@@ -680,8 +680,9 @@ async function uploadOne(f,kind,tries=3){
   for(let i=0;i<tries;i++){
     try{
       const r=await fetch('/api/upload',{method:'POST',headers,body:f});
-      if(!r.ok)throw new Error('HTTP '+r.status);
-      const j=await r.json();
+      const raw=await r.text();
+      let j; try{j=JSON.parse(raw);}catch(e){throw new Error('HTTP '+r.status+' — '+raw.slice(0,120));}
+      if(!r.ok)throw new Error(j.error||'HTTP '+r.status);
       if(!j.ok)throw new Error(j.error||'upload fail');
       return j;
     }catch(e){err=e; if(i<tries-1)await wait(400*(i+1));}
@@ -689,14 +690,15 @@ async function uploadOne(f,kind,tries=3){
   throw err;
 }
 async function upload(files,kind){
-  let ok=0; const failed=[];
-  for(const f of files){
-    $('#statPill').textContent='upload '+(ok+failed.length+1)+'/'+files.length;
+  const allowed=files.filter(f=>kind==='image'?f.type.startsWith('image/'):f.type.startsWith('audio/'));
+  if(!allowed.length)return toast('Is section me sirf '+(kind==='image'?'image':'audio')+' files chalte hain');
+  let done=0,ok=0; const failed=[];
+  for(const f of allowed){
     try{
       const j=await uploadOne(f,kind);
-      MEDIA=MEDIA.filter(m=>m.name!==j.media.name);MEDIA.push(j.media);
-      ok++; drawMedia();               // turant dikhao — sab files ka wait mat karo
-    }catch(e){ failed.push(f.name); }
+      MEDIA=MEDIA.filter(m=>m.name!==j.media.name);MEDIA.push(j.media);ok++;
+    }catch(e){ failed.push(f.name+' ('+e.message+')'); }
+    done++; $('#statPill').textContent='upload '+done+'/'+allowed.length;
   }
   $('#statPill').textContent='tayyar'; drawMedia();
   if(failed.length){
@@ -706,19 +708,19 @@ async function upload(files,kind){
     toast(ok+' file computer par save ho gayi');
   }
 }
+window.chrome?.webview?.addEventListener('message',e=>{
+  if(e.data?.type!=='media-added')return;
+  for(const m of e.data.media||[]){MEDIA=MEDIA.filter(x=>x.name!==m.name);MEDIA.push(m);}
+  drawMedia(); toast((e.data.media||[]).length+' original file reference jud gaya');
+});
 document.querySelectorAll('[data-pick]').forEach(btn=>{
-  btn.onclick=()=>{ const kind=btn.dataset.pick;
-    const inp=document.createElement('input'); inp.type='file'; inp.multiple=true;
-    inp.accept = kind==='image' ? 'image/*' : 'audio/*';
-    inp.onchange=()=>upload([...inp.files], kind==='image'?null:kind);
-    inp.click();
-  };
+  btn.onclick=()=>window.chrome?.webview?.postMessage({type:'pick-media',kind:btn.dataset.pick});
 });
 document.querySelectorAll('[data-drop]').forEach(zone=>{
   const kind=zone.dataset.drop;
   ['dragenter','dragover'].forEach(v=>zone.addEventListener(v,e=>{e.preventDefault();e.stopPropagation();zone.classList.add('hot');}));
   ['dragleave','drop'].forEach(v=>zone.addEventListener(v,e=>{e.preventDefault();e.stopPropagation();zone.classList.remove('hot');}));
-  zone.addEventListener('drop',e=>upload([...e.dataTransfer.files], kind==='image'?null:kind));
+  zone.addEventListener('drop',()=>toast('Add button se native file picker kholo — original file copy nahi hogi'));
 });
 document.addEventListener('dragover',e=>e.preventDefault());
 document.addEventListener('drop',e=>e.preventDefault());
