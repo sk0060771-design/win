@@ -1,6 +1,8 @@
 # ReelForge Native Windows App
 
-ReelForge is a local Windows video editor shell built with C#/.NET 8 and WebView2. The existing `editor.html` is copied unchanged into `ReelForge/wwwroot/`; no Python server is used.
+ReelForge includes a native C# WPF shell and a fully native C++ Win32 editor target. Both use local Windows file paths directly; there is no browser, WebView, upload server, or media copy step in the native targets.
+
+The C++ target is under `Native/ReelForgeNative/`. It uses Win32 controls, GDI+ image rendering, Windows MCI audio playback, and native file dialogs.
 
 ## Structure
 
@@ -11,12 +13,12 @@ ReelForge/
 	App.xaml, App.xaml.cs
 	MainWindow.xaml, MainWindow.xaml.cs
 	Core/RenderEngine.cs
-	Server/AppPaths.cs, Server/ApiRouter.cs
-	wwwroot/editor.html
+	Server/AppPaths.cs
 .github/workflows/build-exe.yml
+Native/ReelForgeNative/CMakeLists.txt, main.cpp
 ```
 
-The app creates `media`, `projects`, `exports`, and `cache` beside the executable. Put `ffmpeg.exe` and `ffprobe.exe` beside the executable, or make them available on `PATH`. WebView2 Runtime is required on the target Windows PC.
+The C++ app reads files from their original C:, D:, E:, or other drive paths. It does not copy media into an app folder. The C# shell still uses the existing FFmpeg support; the C++ target uses Windows-native preview and playback.
 
 ## Build locally on Windows
 
@@ -25,7 +27,7 @@ dotnet restore ReelForge.sln
 dotnet publish ReelForge.sln -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish
 ```
 
-Run `publish\ReelForge.exe`. Keep `wwwroot` in the publish folder because it contains the unchanged editor UI.
+Run `publish\ReelForge.exe` for the C# native shell. The GitHub workflow also creates `ReelForge-native-cpp-windows.zip` containing the C++ Win32 editor.
 
 ## GitHub build
 
@@ -33,4 +35,4 @@ Push the repository, open Actions, and run **Build ReelForge.exe**. The workflow
 
 ## Scope note
 
-The native shell and local API preserve the editor's existing fetch paths and project format. The current first renderer produces a working FFmpeg MP4 from the first timeline clip; transitions, captions, overlays, audio mixing, and per-clip effects should be ported into `Core/RenderEngine.cs` as the next implementation slice.
+The native C++ editor currently provides local image/audio selection, image preview, audio playback, library-to-timeline editing, ratio/quality/FPS controls, and project path saving. Timeline effects, captions, overlays, audio mixing, and FFmpeg export remain the next native implementation slice.

@@ -22,3 +22,14 @@ jobs:
         with:
           name: ReelForge-windows
           path: ReelForge-windows.zip
+      - name: Configure native C++ editor
+        run: cmake -S Native/ReelForgeNative -B Native/ReelForgeNative/build -G "Visual Studio 17 2022" -A x64
+      - name: Build native C++ editor
+        run: cmake --build Native/ReelForgeNative/build --config Release
+      - name: Package native C++ editor
+        shell: pwsh
+        run: Compress-Archive -Path Native\ReelForgeNative\build\Release\ReelForgeNative.exe -DestinationPath ReelForge-native-cpp-windows.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ReelForge-native-cpp-windows
+          path: ReelForge-native-cpp-windows.zip
