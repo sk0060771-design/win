@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReelForge</title>
+<style>
+:root{
+  --ink:#101219; --panel:#171a23; --panel2:#1d212c; --line:#2a3040;
+  --text:#e9ebf2; --mut:#8a93a8; --forge:#ff9d2e; --forge-dim:#c9762010;
+  --ok:#59d3a9; --bad:#ff6b6b; --r:10px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--ink);color:var(--text);
+  font:14px/1.45 "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Noto Sans Devanagari",sans-serif;
+  overflow:hidden}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--forge);outline-offset:2px}
+
+.app{display:grid;grid-template-rows:auto 1fr auto;grid-template-columns:100%;height:100vh}
+.app>*{min-width:0}
+.top{display:flex;align-items:center;gap:14px;padding:9px 14px;background:var(--panel);
+  border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:8px}
+.brand b{font-size:17px;letter-spacing:-.02em}
+.brand span{color:var(--mut);font-size:12px}
+.spacer{flex:1}
+.mid{display:grid;grid-template-columns:238px 1fr 312px;min-height:0}
+.col{min-height:0;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+.col+.col{border-left:1px solid var(--line)}
+.col h2{margin:0;padding:10px 12px 8px;font-size:12px;font-weight:600;color:var(--mut);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.scroll{overflow:auto;padding:10px 12px;flex:1}
+.scroll::-webkit-scrollbar{width:9px;height:9px}
+.scroll::-webkit-scrollbar-thumb{background:#2f3648;border-radius:6px}
+
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r);padding:6px 11px;
+  transition:border-color .12s,background .12s}
+.btn:hover{border-color:#3d4459;background:#232836}
+.btn.go{background:var(--forge);border-color:var(--forge);color:#20150a;font-weight:600}
+.btn.go:hover{background:#ffae52}
+.btn.ghost{background:transparent}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn.sm{padding:3px 8px;font-size:12px;border-radius:7px}
+select,input[type=text],input[type=number],input[type=color],textarea{
+  background:#12151d;border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100%}
+input[type=color]{padding:2px;height:32px}
+input[type=range]{width:100%;accent-color:var(--forge)}
+label.f{display:block;margin:11px 0 0}
+label.f>span{display:block;font-size:12px;color:var(--mut);margin-bottom:4px}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+.chk{display:flex;align-items:center;gap:7px;padding:4px 0;font-size:13px;cursor:pointer}
+.chk input{accent-color:var(--forge);width:15px;height:15px}
+.pill{font-size:11px;color:var(--mut);background:#12151d;border:1px solid var(--line);
+  border-radius:999px;padding:2px 8px}
+
+/* tabs */
+.tabs{display:flex;border-bottom:1px solid var(--line);background:var(--panel)}
+.tabs button{flex:1;background:none;border:0;border-bottom:2px solid transparent;
+  padding:9px 4px;font-size:12.5px;color:var(--mut)}
+.tabs button.on{color:var(--forge);border-bottom-color:var(--forge)}
+
+/* library */
+.drop{border:1px dashed #38405a;border-radius:var(--r);padding:16px 10px;text-align:center;
+  color:var(--mut);font-size:12.5px;margin-bottom:10px;transition:.15s}
+.drop.sm{padding:9px 8px;font-size:11.5px;margin-bottom:0}
+.drop.hot{border-color:var(--forge);color:var(--forge);background:var(--forge-dim)}
+.libgrp{padding-bottom:2px}
+.libhd{display:flex;align-items:center;gap:7px;font-size:12.5px;margin-bottom:7px}
+.libhd b{font-weight:600}
+.pill.sm{font-size:9.5px;padding:1px 6px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mgrid1{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.arow{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;
+  padding:6px 8px;background:#0d0f15;cursor:pointer;font-size:12px}
+.arow:hover{border-color:#3d4459}
+.arow img{width:34px;height:24px;object-fit:contain;border-radius:4px;background:#12151d;flex:none}
+.arow .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.arow .dur{color:var(--mut);font-size:10.5px}
+.arow .x{background:none;border:0;color:var(--mut);font-size:14px;padding:0 2px}
+.arow .x:hover{color:var(--bad)}
+.mitem{position:relative;border:1px solid var(--line);border-radius:9px;overflow:hidden;
+  background:#0d0f15;cursor:pointer}
+.mitem img{display:block;width:100%;height:74px;object-fit:cover;background:#0d0f15}
+.mitem.aud img{object-fit:contain;padding:4px;height:48px}
+.mitem .nm{font-size:10.5px;padding:3px 5px;color:var(--mut);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.mitem.on{border-color:var(--forge);box-shadow:0 0 0 1px var(--forge) inset}
+.mitem .x{position:absolute;top:3px;right:3px;background:#000a;border:0;border-radius:6px;
+  color:#fff;width:20px;height:20px;line-height:1;opacity:0;font-size:13px}
+.mitem:hover .x{opacity:1}
+
+/* stage */
+.stagewrap{flex:1;display:flex;align-items:center;justify-content:center;padding:14px;min-height:0;
+  background:radial-gradient(60% 60% at 50% 40%,#171a24,#0c0e14)}
+.stage{position:relative;max-width:100%;max-height:100%;border-radius:12px;overflow:hidden;
+  border:1px solid var(--line);background:#000;box-shadow:0 18px 50px #0009}
+.stage img,.stage video{display:block;max-width:100%;max-height:calc(100vh - 360px);
+  width:auto;height:auto;background:#000}
+.stage .empty{padding:60px 40px;color:var(--mut);text-align:center;font-size:13px;width:min(520px,86vw)}
+.busy{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+  background:#0a0c12cc;font-size:13px;color:var(--forge)}
+.busy.on{display:flex}
+.transport{display:flex;align-items:center;gap:10px;padding:8px 14px;border-top:1px solid var(--line);
+  background:var(--panel)}
+.time{font-variant-numeric:tabular-nums;color:var(--mut);font-size:12.5px;min-width:96px}
+#seek{flex:1}
+
+/* timeline */
+.tl{background:var(--panel);border-top:1px solid var(--line);padding:8px 12px 10px}
+.tlrow{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;min-height:74px}
+.tlrow::-webkit-scrollbar{height:9px}
+.tlrow::-webkit-scrollbar-thumb{background:#2f3648;border-radius:6px}
+.cl{position:relative;flex:0 0 auto;width:96px;border:1px solid var(--line);border-radius:9px;
+  overflow:hidden;background:#0d0f15;cursor:pointer}
+.cl img{display:block;width:100%;height:46px;object-fit:cover}
+.cl .meta{font-size:10px;color:var(--mut);padding:2px 5px;display:flex;justify-content:space-between}
+.cl.on{border-color:var(--forge);box-shadow:0 0 0 1px var(--forge) inset}
+.cl.drag{opacity:.4}
+.cl .badge{position:absolute;top:2px;left:2px;background:#000a;border-radius:5px;font-size:9px;
+  padding:1px 4px;color:#cfd6e6}
+
+/* audio lanes on timeline */
+.lanes{margin-top:7px;display:flex;flex-direction:column;gap:4px}
+.lane{position:relative;height:24px;border:1px solid var(--line);border-radius:7px;background:#12151d;
+  overflow:hidden;cursor:pointer}
+.lane .blk{position:absolute;top:0;bottom:0;background:#20344a;border:1px solid #33628f;
+  border-radius:6px;font-size:10.5px;color:#cfe2f7;padding:2px 6px;white-space:nowrap;overflow:hidden}
+.lane .blk.sfx{background:#3a2c17;border-color:#8a5a26;color:#ffd9a8}
+.lane .blk.voice{background:#2a1f3f;border-color:#6a4fb8;color:#d9ceff}
+.lane .blk.on{border-color:var(--forge);background:#3a2c17;color:#ffd9a8}
+.lane .ph{position:absolute;top:0;bottom:0;width:2px;background:var(--forge);opacity:.9}
+
+/* cards */
+.card{border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin-bottom:9px;background:#12151d}
+.card.on{border-color:var(--forge)}
+.card .hd{display:flex;align-items:center;gap:6px;font-size:12.5px;margin-bottom:2px}
+.card .hd b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+
+.prog{height:6px;border-radius:6px;background:#12151d;overflow:hidden;border:1px solid var(--line)}
+.prog i{display:block;height:100%;width:0;background:var(--forge);transition:width .2s}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#10131b;
+  border:1px solid var(--line);border-radius:10px;padding:9px 14px;font-size:13px;
+  box-shadow:0 12px 30px #0009;opacity:0;pointer-events:none;transition:.2s;z-index:50;max-width:80vw}
+.toast.on{opacity:1}
+.note{font-size:12px;color:var(--mut);margin-top:8px;line-height:1.5}
+.sep{height:1px;background:var(--line);margin:13px 0}
+h3.sec{font-size:12px;color:var(--mut);margin:0 0 2px;font-weight:600}
+
+/* stale / preview placeholder */
+.stale{position:absolute;left:0;right:0;top:0;background:#20150acc;color:var(--forge);
+  font-size:12px;padding:6px 10px;text-align:center;backdrop-filter:blur(3px)}
+.ph-box{padding:38px 26px;text-align:center;color:var(--mut);font-size:13px;
+  width:min(520px,86vw);display:flex;flex-direction:column;align-items:center;gap:12px}
+.ph-box b{color:var(--text);font-size:14px}
+
+/* projects modal */
+.modal{position:fixed;inset:0;background:#05070bcc;z-index:60;padding:16px;
+  display:none;align-items:center;justify-content:center}
+.modal.on{display:flex}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  width:600px;max-width:100%;max-height:86vh;display:flex;flex-direction:column;
+  overflow:hidden;box-shadow:0 24px 70px #000b}
+.sheet .shd{display:flex;align-items:center;gap:10px;padding:12px 14px;
+  border-bottom:1px solid var(--line)}
+.sheet .shd b{flex:1;font-size:15px}
+.sheet .sbody{overflow:auto;padding:12px 14px;flex:1}
+.prow{display:flex;align-items:center;gap:10px;border:1px solid var(--line);
+  border-radius:10px;padding:9px 11px;margin-bottom:8px;background:#12151d}
+.prow.cur{border-color:var(--forge);box-shadow:0 0 0 1px var(--forge) inset}
+.prow .pn{flex:1;min-width:0}
+.prow .pn b{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow .pn span{font-size:11px;color:var(--mut)}
+.newrow{display:flex;gap:8px;align-items:flex-end}
+.newrow label.f{flex:1;margin:0}
+
+/* mobile section nav */
+.mnav{display:none;position:sticky;bottom:0;z-index:20;background:var(--panel);
+  border-top:1px solid var(--line)}
+.mnav button{flex:1;background:none;border:0;border-top:2px solid transparent;
+  padding:10px 4px;font-size:12.5px;color:var(--mut)}
+.mnav button.on{color:var(--forge);border-top-color:var(--forge)}
+
+@media (max-width:1180px){.mid{grid-template-columns:200px 1fr 272px}}
+@media (max-width:1000px){
+  .mid{grid-template-columns:170px 1fr 240px}
+  .top{gap:9px;padding:8px 10px}
+  .stage img,.stage video{max-height:calc(100vh - 330px)}
+}
+@media (max-width:860px){
+  html,body{height:auto}
+  body{overflow:auto}
+  .app{height:auto;min-height:100dvh;grid-template-rows:auto 1fr auto auto}
+  .mid{display:flex;flex-direction:column;min-height:0}
+  .col{display:none;overflow:visible}
+  .col+.col{border-left:0;border-top:1px solid var(--line)}
+  body[data-view="lib"] .c-lib,
+  body[data-view="stage"] .c-stage,
+  body[data-view="insp"] .c-insp{display:flex;flex:1}
+  .scroll{overflow:visible;flex:none;padding:10px}
+  .stagewrap{padding:10px;min-height:180px}
+  .stage img,.stage video{max-height:58vh}
+  .stage .empty,.ph-box{padding:30px 18px;font-size:12.5px}
+  .mnav{display:flex}
+  .top{padding:8px 10px;gap:8px}
+  .brand b{font-size:15px}
+  .top label.f{width:auto!important;flex:1;min-width:76px}
+  .top .btn{padding:6px 9px;font-size:12.5px}
+  .mgrid{grid-template-columns:1fr 1fr 1fr}
+  .transport{flex-wrap:wrap;gap:8px}
+  .transport .time{min-width:0;order:3;width:100%;text-align:center}
+  #seek{min-width:120px}
+}
+@media (max-width:520px){
+  .brand span{display:none}
+  .mgrid{grid-template-columns:1fr 1fr}
+  .top label.f>span{font-size:11px}
+  .sheet{max-height:92vh}
+  .prow{flex-wrap:wrap}
+}
+@media (hover:none){
+  .mitem .x{opacity:1}
+  .btn,.tabs button,.mnav button{min-height:36px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="brand"><b>ReelForge</b><span id="hostinfo">jud raha hai…</span></div>
+    <label class="f" style="margin:0;width:92px"><span>Ratio</span>
+      <select id="ratio"><option>16:9</option><option>9:16</option><option>1:1</option>
+        <option>4:5</option><option>21:9</option></select></label>
+    <label class="f" style="margin:0;width:104px"><span>Quality</span>
+      <select id="quality"><option value="480">480p draft</option><option value="720">720p</option>
+        <option value="1080" selected>1080p</option><option value="1440">1440p</option></select></label>
+    <label class="f" style="margin:0;width:74px"><span>FPS</span>
+      <select id="fps"><option>24</option><option selected>30</option><option>60</option></select></label>
+    <div class="spacer"></div>
+    <span class="pill" id="projPill" title="abhi khula project">last.json</span>
+    <button class="btn ghost sm" id="btnProjects">Projects</button>
+    <button class="btn ghost sm" id="btnFolder">Exports folder</button>
+    <button class="btn" id="btnPreview">Preview banao</button>
+    <button class="btn go" id="btnExport">Export karo</button>
+  </header>
+
+  <div class="mid">
+    <!-- library -->
+    <section class="col c-lib">
+      <h2>Media library</h2>
+      <div class="scroll">
+
+        <div class="libgrp">
+          <div class="libhd"><b>Photos</b>
+            <button class="btn sm ghost" data-pick="image">+ Add</button></div>
+          <div class="drop sm" data-drop="image">Photos yahan chhodo</div>
+          <div class="row" style="margin:7px 0 9px">
+            <button class="btn sm" id="btnAddSel">Timeline me daalo</button>
+            <button class="btn sm ghost" id="btnAll">Sab</button>
+          </div>
+          <label class="f" style="margin:0 0 9px"><span>Kram</span>
+            <select id="sortSel"><option value="dateAsc">Date: purani pehle</option>
+              <option value="dateDesc">Date: nayi pehle</option>
+              <option value="name">Naam se</option></select></label>
+          <div class="mgrid" id="mgridImg"></div>
+        </div>
+
+        <div class="sep"></div>
+        <div class="libgrp">
+          <div class="libhd"><b>Music</b><span class="pill sm">background</span>
+            <button class="btn sm ghost" data-pick="music">+ Add</button></div>
+          <div class="drop sm" data-drop="music">Gaane yahan chhodo</div>
+          <div class="mgrid1" id="mgridMusic"></div>
+          <div class="note">Click karoge to playhead par lag jayega. Audio tab me
+            "Poori timeline par" se poore video par phaila sakte ho (chhota ho to loop hoga).</div>
+        </div>
+
+        <div class="sep"></div>
+        <div class="libgrp">
+          <div class="libhd"><b>SFX</b><span class="pill sm">sound effects</span>
+            <button class="btn sm ghost" data-pick="sfx">+ Add</button></div>
+          <div class="drop sm" data-drop="sfx">SFX yahan chhodo</div>
+          <div class="mgrid1" id="mgridSfx"></div>
+          <div class="note">Click karoge to playhead par exact us jagah lag jayega.</div>
+        </div>
+
+        <div class="sep"></div>
+        <div class="libgrp">
+          <div class="libhd"><b>Voice over</b><span class="pill sm">narration</span>
+            <button class="btn sm ghost" data-pick="voice">+ Add</button></div>
+          <div class="drop sm" data-drop="voice">Voice files yahan chhodo</div>
+          <div class="row" style="margin:7px 0 9px">
+            <button class="btn sm" id="btnAddVoice">Voice sequence me daalo</button>
+            <button class="btn sm ghost" id="btnVoiceAll">Sab</button>
+          </div>
+          <label class="f" style="margin:0 0 9px"><span>Kram</span>
+            <select id="voiceSortSel"><option value="dateAsc">Date: purani pehle</option>
+              <option value="dateDesc">Date: nayi pehle</option>
+              <option value="name">Naam se</option></select></label>
+          <div class="mgrid" id="mgridVoice"></div>
+          <div class="note">Photos ki tarah — select karke "Voice sequence me daalo" dabao.
+            Jitni voice files ki total lambai hogi, photos apne aap utni hi der me fit ho jayengi.</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- stage -->
+    <section class="col c-stage">
+      <div class="stagewrap">
+        <div class="stage" id="stage">
+          <div class="ph-box" id="empty"><b>Timeline khaali hai</b>
+            <span>Library se photos select karke "Timeline me daalo" dabao.</span></div>
+          <div class="ph-box" id="noprev" hidden><b>Preview MP4 tayyar nahi hai</b>
+            <span>Yahan sirf asli MP4 chalta hai — photo frame nahi dikhaya jata.
+              Neeche ka button dabao, poori timeline ka 480p MP4 ban jayega.</span>
+            <button class="btn go" id="btnMakePrev">Preview banao</button></div>
+          <video id="vid" hidden controls playsinline preload="auto"></video>
+          <div class="stale" id="stale" hidden>timeline badal gayi — preview purana hai,
+            dobara "Preview banao" dabao</div>
+          <div class="busy" id="busy">render ho raha hai…</div>
+        </div>
+      </div>
+      <div class="transport">
+        <button class="btn sm" id="btnPrev">◀</button>
+        <button class="btn sm" id="btnNext">▶</button>
+        <button class="btn sm" id="btnPlay">▶︎ Chalao</button>
+        <input type="range" id="seek" min="0" max="1000" value="0">
+        <span class="time" id="tlabel">00:00.0 / 00:00.0</span>
+      </div>
+      <div class="tl">
+        <div class="tlrow" id="tlrow"></div>
+        <div class="lanes" id="lanes"></div>
+      </div>
+    </section>
+
+    <!-- inspector -->
+    <section class="col c-insp">
+      <div class="tabs" id="tabs">
+        <button data-tab="clip" class="on">Clip</button>
+        <button data-tab="fx">Video FX</button>
+        <button data-tab="audio">Audio</button>
+        <button data-tab="text">Text</button>
+      </div>
+      <div class="scroll" id="insp"></div>
+    </section>
+  </div>
+
+  <footer class="top" style="border-top:1px solid var(--line);border-bottom:0">
+    <span class="pill" id="statPill">tayyar</span>
+    <div class="prog" style="flex:1"><i id="progBar"></i></div>
+    <span class="time" id="progText"></span>
+    <button class="btn sm ghost" id="btnCancel" hidden>Rok do</button>
+    <a class="btn sm" id="dl" hidden download>Download</a>
+  </footer>
+  <nav class="mnav" id="mnav">
+    <button data-view="lib">Library</button>
+    <button data-view="stage" class="on">Preview</button>
+    <button data-view="insp">Settings</button>
+  </nav>
+</div>
+
+<div class="modal" id="projModal">
+  <div class="sheet">
+    <div class="shd"><b>Projects</b>
+      <button class="btn sm ghost" id="btnProjClose">Band karo</button></div>
+    <div class="sbody">
+      <div class="newrow">
+        <label class="f"><span>Naye project ka naam</span>
+          <input type="text" id="newProjName" placeholder="jaise: shaadi-reel"></label>
+        <button class="btn go" id="btnProjNew">Banao</button>
+      </div>
+      <div class="note">Naya project khali timeline ke saath khulta hai. Media library
+        sab projects me same rehti hai.</div>
+      <div class="sep"></div>
+      <div id="projList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const fmt=t=>{t=Math.max(0,t);const m=Math.floor(t/60),s=t-m*60;
+  return String(m).padStart(2,'0')+':'+s.toFixed(1).padStart(4,'0');};
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const MOTIONS=[['kenIn','Ken Burns zoom in'],['kenOut','Ken Burns zoom out'],['panLR','Pan left→right'],
+ ['panRL','Pan right→left'],['tiltUp','Crane tilt up'],['tiltDown','Tilt down'],
+ ['handheld','Handheld camera'],['punch','Impact punch'],['drift','Dutch drift'],
+ ['float','Floating card'],['spiral','Spiral reveal'],['dolly','Slow push'],
+ ['tilt3d','3D tilt swing'],['slideIn','Slide in'],['focus','Focus pull']];
+const TRANS=[['none','Hard cut'],['fade','Cross fade'],['zoom','Zoom through'],['whip','Whip pan'],
+ ['push','Push up'],['flash','Flash'],['spin','Spin close'],['iris','Iris reveal'],
+ ['blur','Dissolve'],['leak','Light leak']];
+const LOOKS=[['none','Original'],['warm','Warm sunset'],['cool','Cool blue'],['cine','Teal & orange'],
+ ['bw','Black & white'],['vintage','Vintage film'],['vivid','Vivid pop'],['moody','Dark moody']];
+const CAPS=[['fadeup','Fade up'],['type','Typewriter'],['pop','Pop'],['slide','Slide in']];
+const FITS=[['auto','Auto'],['cover','Frame bharo'],['contain','Blur background']];
+const AFX=[['bass','Bass boost'],['treble','Treble boost'],['muffle','Phone / muffle'],
+ ['echo','Echo / space'],['crush','Lo-fi crush']];
+const DEF_MOTION=['kenIn','panLR','handheld','punch','float','tiltUp','dolly','panRL','spiral','drift','kenOut','tiltDown'];
+const DEF_TRANS=['fade','zoom','whip','leak','push','blur','flash','iris'];
+
+const S={ratio:'16:9',quality:1080,fps:30,clips:[],audio:[],voice:[],
+  fxg:{grain:true,vignette:true,letterbox:false,fade:true,
+       leaks:false,leakAmt:.6,dust:false,dustAmt:.5,lights:false,lightAmt:.6,
+       sparkle:false,sparkAmt:.5,bpm:0,phase:0,pulse:.5},
+  afx:{bass:{on:false,amt:.5},treble:{on:false,amt:.5},muffle:{on:false,amt:.5},
+       echo:{on:false,amt:.5},crush:{on:false,amt:.5},pitch:{on:false,amt:0}},
+  overlays:[]};
+let MEDIA=[],sel=new Set(),selVoiceLib=new Set(),selClip=-1,selAud=-1,selOv=-1,selVoice=-1,
+    t=0,addCount=0,busy=false,tab='clip';
+/* preview state — boot se pehle chahiye, isliye yahan upar */
+let previewUrl=null, previewStale=true, seeking=false;
+
+const total=()=>Math.max(S.clips.reduce((a,c)=>a+(+c.dur||0),0),
+  ...S.audio.map(a=>0),0);
+const vidLen=()=>S.clips.reduce((a,c)=>a+(+c.dur||0),0);
+const voiceTotal=()=>S.voice.reduce((a,v)=>a+(+v.dur||0),0);
+const voiceStartOf=i=>S.voice.slice(0,i).reduce((a,v)=>a+(+v.dur||0),0);
+const startOf=i=>S.clips.slice(0,i).reduce((a,c)=>a+(+c.dur||0),0);
+const project=()=>JSON.parse(JSON.stringify({ratio:S.ratio,quality:+S.quality,fps:+S.fps,
+  clips:S.clips,audio:S.audio,voice:S.voice,fxg:S.fxg,afx:S.afx,overlays:S.overlays}));
+const mediaBy=n=>MEDIA.find(m=>m.name===n);
+
+function toast(m,ms=2800){const el=$('#toast');el.textContent=m;el.classList.add('on');
+  clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('on'),ms);}
+/* Antivirus/firewall kabhi kabhi request beech me hi kaat deta hai (Windows par
+   aam baat hai). Ek network glitch se poora kaam ruk na jaye, isliye har GET/POST
+   ko 2 baar dobara try karte hain, thodi der ruk kar. */
+function wait(ms){return new Promise(r=>setTimeout(r,ms));}
+async function jget(p,tries=3){
+  let err;
+  for(let i=0;i<tries;i++){
+    try{const r=await fetch(p,{cache:'no-store'});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return await r.json();
+    }catch(e){err=e; if(i<tries-1)await wait(350*(i+1));}
+  }
+  throw err;
+}
+async function jpost(p,o,tries=2){
+  let err;
+  for(let i=0;i<tries;i++){
+    try{const r=await fetch(p,{method:'POST',
+        headers:{'Content-Type':'application/json'},body:JSON.stringify(o||{})});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return await r.json();
+    }catch(e){err=e; if(i<tries-1)await wait(350*(i+1));}
+  }
+  throw err;
+}
+
+/* ---------- projects ---------- */
+let curProject='last.json', PROJECTS=[];
+const DEFAULTS={ratio:'16:9',quality:1080,fps:30,
+  fxg:{grain:true,vignette:true,letterbox:false,fade:true,
+       leaks:false,leakAmt:.6,dust:false,dustAmt:.5,lights:false,lightAmt:.6,
+       sparkle:false,sparkAmt:.5,bpm:0,phase:0,pulse:.5},
+  afx:{bass:{on:false,amt:.5},treble:{on:false,amt:.5},muffle:{on:false,amt:.5},
+       echo:{on:false,amt:.5},crush:{on:false,amt:.5},pitch:{on:false,amt:0}}};
+
+function rememberProject(n){try{localStorage.setItem('reelforge:project',n);}catch(e){}}
+function lastProject(){try{return localStorage.getItem('reelforge:project');}catch(e){return null;}}
+
+function applyProject(p){
+  p=p||{};
+  S.ratio=p.ratio||DEFAULTS.ratio; S.quality=p.quality||DEFAULTS.quality; S.fps=p.fps||DEFAULTS.fps;
+  S.clips=Array.isArray(p.clips)?p.clips:[];
+  S.audio=Array.isArray(p.audio)?p.audio:[];
+  /* voice purane project me ek hi object tha — dono chalte hain */
+  S.voice=Array.isArray(p.voice)?p.voice:(p.voice&&p.voice.file?[p.voice]:[]);
+  S.overlays=Array.isArray(p.overlays)?p.overlays:[];
+  S.fxg=Object.assign({},DEFAULTS.fxg,p.fxg||{});
+  S.afx=JSON.parse(JSON.stringify(DEFAULTS.afx));
+  Object.keys(p.afx||{}).forEach(k=>{if(S.afx[k])Object.assign(S.afx[k],p.afx[k]);});
+  addCount=S.clips.length; selClip=S.clips.length?0:-1;
+  selAud=-1; selVoice=-1; selOv=-1; t=0;
+  previewUrl=null; previewStale=true; $('#vid').removeAttribute('src');
+  $('#ratio').value=S.ratio; $('#quality').value=S.quality; $('#fps').value=S.fps;
+  drawMedia(); drawTimeline(); drawInspector(); updateStage(); updateSeek();
+}
+function setCurrent(name){curProject=name;rememberProject(name);$('#projPill').textContent=name;}
+
+async function refreshProjects(){
+  try{const r=await jget('/api/projects');PROJECTS=r.projects||[];}catch(e){PROJECTS=[];}
+  drawProjects();
+}
+function drawProjects(){
+  const box=$('#projList'); if(!box)return;
+  if(!PROJECTS.length){box.innerHTML='<div class="note">Abhi koi project nahi hai.</div>';return;}
+  box.innerHTML=PROJECTS.map(p=>{
+    const dt=p.mtime?new Date(p.mtime*1000):null;
+    const d=dt?dt.toLocaleDateString()+' '+dt.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';
+    const bits=[p.clips+' photo',p.voice+' voice',fmt(p.dur||0)].join(' • ');
+    return '<div class="prow'+(p.name===curProject?' cur':'')+'">'+
+      '<div class="pn"><b>'+esc(p.name)+'</b><span>'+bits+' — '+esc(d)+'</span></div>'+
+      '<button class="btn sm" data-popen="'+esc(p.name)+'">Kholo</button>'+
+      '<button class="btn sm ghost" data-pdel="'+esc(p.name)+'">Delete</button></div>';
+  }).join('');
+  box.querySelectorAll('[data-popen]').forEach(el=>el.onclick=()=>openProject(el.dataset.popen));
+  box.querySelectorAll('[data-pdel]').forEach(el=>el.onclick=()=>deleteProject(el.dataset.pdel));
+}
+async function openProject(name){
+  if(name===curProject){$('#projModal').classList.remove('on');return;}
+  try{
+    const r=await jget('/api/project?name='+encodeURIComponent(name));
+    if(!r.ok)return toast(r.error||'project khula nahi');
+    applyProject(r.project); setCurrent(name);
+    $('#projModal').classList.remove('on');
+    drawProjects(); toast(name+' khul gaya');
+  }catch(e){toast('project khula nahi');}
+}
+async function newProject(){
+  const raw=($('#newProjName').value||'').trim();
+  const r=await jpost('/api/project/new',{name:raw});
+  if(!r.ok)return toast(r.error||'ban nahi paya');
+  $('#newProjName').value='';
+  applyProject(r.project); setCurrent(r.name);
+  PROJECTS=r.projects||PROJECTS; drawProjects();
+  $('#projModal').classList.remove('on');
+  toast(r.name+' ban gaya — khaali timeline');
+}
+async function deleteProject(name){
+  if(!confirm(name+' delete kar dein? Wapas nahi aayega.'))return;
+  const r=await jpost('/api/project/delete',{name});
+  if(!r.ok)return toast(r.error||'delete nahi hua');
+  PROJECTS=r.projects||[];
+  if(name===curProject){                 // khula hua hi delete kiya -> khaali kar do
+    applyProject(null);
+    setCurrent(PROJECTS.length?PROJECTS[0].name:'last.json');
+    if(PROJECTS.length)openProject(PROJECTS[0].name);
+  }
+  drawProjects(); toast(name+' delete ho gaya');
+}
+$('#btnProjects').onclick=()=>{$('#projModal').classList.add('on');refreshProjects();};
+$('#btnProjClose').onclick=()=>$('#projModal').classList.remove('on');
+$('#projModal').onclick=e=>{if(e.target.id==='projModal')e.currentTarget.classList.remove('on');};
+$('#btnProjNew').onclick=newProject;
+$('#newProjName').onkeydown=e=>{if(e.key==='Enter')newProject();};
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')$('#projModal').classList.remove('on');});
+
+/* ---------- mobile section nav ---------- */
+document.querySelectorAll('#mnav button').forEach(btn=>{
+  btn.onclick=()=>{
+    document.body.dataset.view=btn.dataset.view;
+    document.querySelectorAll('#mnav button').forEach(x=>x.classList.toggle('on',x===btn));
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+});
+document.body.dataset.view='stage';
+
+/* ---------- boot ---------- */
+async function boot(){
+  bindVideo();
+  const h=await jget('/api/hello');
+  MEDIA=h.media||[];
+  PROJECTS=h.projects||[];
+  $('#hostinfo').textContent=h.cores+' core • '+(h.font?'text on':'text off');
+  const names=PROJECTS.map(p=>p.name);
+  let want=lastProject();
+  if(!want||!names.includes(want))want=names.includes('last.json')?'last.json':(names[0]||'last.json');
+  setCurrent(want);
+  if(names.includes(want)){
+    const r=await jget('/api/project?name='+encodeURIComponent(want));
+    if(r.ok&&r.project){
+      applyProject(r.project);
+      if((S.clips||[]).length)toast(want+' wapas load ho gaya');
+    }
+  }
+  $('#ratio').value=S.ratio; $('#quality').value=S.quality; $('#fps').value=S.fps;
+  drawMedia(); drawTimeline(); drawInspector(); updateStage(); updateSeek();
+  drawProjects();
+}
+(async function(){
+  try{ await boot(); }
+  catch(e){
+    /* pehli koshish antivirus/firewall ke ek glitch se fail ho sakti hai —
+       thoda ruk kar ek aakhri baar try karo, phir hi haar maano */
+    toast('Server se judne me dikkat aa rahi hai, dobara koshish kar rahe hain…', 3000);
+    await new Promise(r=>setTimeout(r,1500));
+    try{ await boot(); }
+    catch(e2){
+      toast('Server se connect nahi hua — start-reelforge.bat chalao, ya firewall/antivirus check karo', 8000);
+    }
+  }
+})();
+
+/* ---------- library ---------- */
+function sortedImages(){
+  const mode=$('#sortSel').value,a=MEDIA.filter(m=>m.type==='image');
+  const nm=(x,y)=>x.name.localeCompare(y.name,undefined,{numeric:true});
+  const dt=m=>Number.isFinite(m.date)?m.date:0;
+  if(mode==='dateAsc')a.sort((x,y)=>(dt(x)-dt(y))||nm(x,y));
+  else if(mode==='dateDesc')a.sort((x,y)=>(dt(y)-dt(x))||nm(x,y));
+  else a.sort(nm);
+  return a;
+}
+function drawMedia(){
+  const gi=$('#mgridImg');gi.innerHTML='';
+  for(const m of sortedImages()){
+    const d=document.createElement('div');
+    d.className='mitem'+(sel.has(m.name)?' on':'');
+    d.innerHTML='<img loading="lazy" src="/thumb/'+encodeURIComponent(m.name)+'" onerror="this.style.opacity=0.25">'+
+      '<div class="nm">'+esc(m.name)+'</div><button class="x" title="delete">×</button>';
+    d.onclick=e=>{
+      if(e.target.classList.contains('x')){delMedia(m.name);return;}
+      if(sel.has(m.name))sel.delete(m.name);else sel.add(m.name);
+      drawMedia();
+    };
+    gi.appendChild(d);
+  }
+  if(!sortedImages().length)gi.innerHTML='<div class="note" style="grid-column:1/-1">Koi photo nahi hai.</div>';
+
+  drawAudioLib('mgridMusic','music',m=>addAudio(m,t));
+  drawAudioLib('mgridSfx','sfx',m=>addAudio(m,t));
+  drawVoiceLib();
+}
+function sortedVoiceLib(){
+  const mode=$('#voiceSortSel').value,a=MEDIA.filter(m=>m.type==='audio'&&(m.kind||'music')==='voice');
+  const nm=(x,y)=>x.name.localeCompare(y.name,undefined,{numeric:true});
+  const dt=m=>Number.isFinite(m.date)?m.date:0;
+  if(mode==='dateAsc')a.sort((x,y)=>(dt(x)-dt(y))||nm(x,y));
+  else if(mode==='dateDesc')a.sort((x,y)=>(dt(y)-dt(x))||nm(x,y));
+  else a.sort(nm);
+  return a;
+}
+function drawVoiceLib(){
+  const g=$('#mgridVoice'); if(!g)return; g.innerHTML='';
+  for(const m of sortedVoiceLib()){
+    const d=document.createElement('div');
+    d.className='mitem aud'+(selVoiceLib.has(m.name)?' on':'');
+    d.innerHTML='<img loading="lazy" src="/thumb/'+encodeURIComponent(m.name)+'" onerror="this.style.opacity=0.25">'+
+      '<div class="nm">'+esc(m.name)+' · '+fmt(m.duration||0)+'</div><button class="x" title="delete">×</button>';
+    d.onclick=e=>{
+      if(e.target.classList.contains('x')){delMedia(m.name);return;}
+      if(selVoiceLib.has(m.name))selVoiceLib.delete(m.name);else selVoiceLib.add(m.name);
+      drawVoiceLib();
+    };
+    g.appendChild(d);
+  }
+  if(!sortedVoiceLib().length)g.innerHTML='<div class="note" style="grid-column:1/-1">Koi voice file nahi hai.</div>';
+}
+function drawAudioLib(elId,kind,onClick){
+  const g=$('#'+elId);g.innerHTML='';
+  const list=MEDIA.filter(m=>m.type==='audio'&&(m.kind||'music')===kind);
+  for(const m of list){
+    const d=document.createElement('div');d.className='arow';
+    d.innerHTML='<img loading="lazy" src="/thumb/'+encodeURIComponent(m.name)+'" onerror="this.style.opacity=0.25">'+
+      '<span class="nm">'+esc(m.name)+'</span><span class="dur">'+fmt(m.duration||0)+'</span>'+
+      '<button class="x">×</button>';
+    d.onclick=e=>{if(e.target.classList.contains('x')){delMedia(m.name);return;} onClick(m);};
+    g.appendChild(d);
+  }
+  if(!list.length)g.innerHTML='<div class="note">khaali</div>';
+}
+async function delMedia(n){
+  await jpost('/api/delete',{name:n});
+  MEDIA=MEDIA.filter(m=>m.name!==n); sel.delete(n); selVoiceLib.delete(n);
+  S.clips=S.clips.filter(c=>c.file!==n); S.audio=S.audio.filter(a=>a.file!==n);
+  const hadVoice=S.voice.some(v=>v.file===n);
+  S.voice=S.voice.filter(v=>v.file!==n);
+  if(hadVoice)autofitClips();
+  drawMedia(); drawTimeline(); drawInspector(); refresh(); save();
+}
+async function uploadOne(f,kind,tries=3){
+  const headers={'X-Name':encodeURIComponent(f.name)};
+  if(kind)headers['X-Kind']=kind;
+  let err;
+  for(let i=0;i<tries;i++){
+    try{
+      const r=await fetch('/api/upload',{method:'POST',headers,body:f});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      const j=await r.json();
+      if(!j.ok)throw new Error(j.error||'upload fail');
+      return j;
+    }catch(e){err=e; if(i<tries-1)await wait(400*(i+1));}
+  }
+  throw err;
+}
+async function upload(files,kind){
+  let ok=0; const failed=[];
+  for(const f of files){
+    $('#statPill').textContent='upload '+(ok+failed.length+1)+'/'+files.length;
+    try{
+      const j=await uploadOne(f,kind);
+      MEDIA=MEDIA.filter(m=>m.name!==j.media.name);MEDIA.push(j.media);
+      ok++; drawMedia();               // turant dikhao — sab files ka wait mat karo
+    }catch(e){ failed.push(f.name); }
+  }
+  $('#statPill').textContent='tayyar'; drawMedia();
+  if(failed.length){
+    toast(ok+' file save hui, '+failed.length+' fail — '+failed.slice(0,3).join(', ')+
+      (failed.length>3?' aur...':'')+'. Antivirus/firewall check karo, dobara try karo.', 6000);
+  }else{
+    toast(ok+' file computer par save ho gayi');
+  }
+}
+document.querySelectorAll('[data-pick]').forEach(btn=>{
+  btn.onclick=()=>{ const kind=btn.dataset.pick;
+    const inp=document.createElement('input'); inp.type='file'; inp.multiple=true;
+    inp.accept = kind==='image' ? 'image/*' : 'audio/*';
+    inp.onchange=()=>upload([...inp.files], kind==='image'?null:kind);
+    inp.click();
+  };
+});
+document.querySelectorAll('[data-drop]').forEach(zone=>{
+  const kind=zone.dataset.drop;
+  ['dragenter','dragover'].forEach(v=>zone.addEventListener(v,e=>{e.preventDefault();e.stopPropagation();zone.classList.add('hot');}));
+  ['dragleave','drop'].forEach(v=>zone.addEventListener(v,e=>{e.preventDefault();e.stopPropagation();zone.classList.remove('hot');}));
+  zone.addEventListener('drop',e=>upload([...e.dataTransfer.files], kind==='image'?null:kind));
+});
+document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',e=>e.preventDefault());
+$('#sortSel').onchange=drawMedia;
+$('#voiceSortSel').onchange=drawVoiceLib;
+$('#btnAll').onclick=()=>{const im=sortedImages();
+  if(sel.size===im.length)sel.clear();else im.forEach(m=>sel.add(m.name));drawMedia();};
+$('#btnVoiceAll').onclick=()=>{const vm=sortedVoiceLib();
+  if(selVoiceLib.size===vm.length)selVoiceLib.clear();else vm.forEach(m=>selVoiceLib.add(m.name));drawVoiceLib();};
+$('#btnAddVoice').onclick=()=>{
+  const names=sortedVoiceLib().filter(m=>selVoiceLib.has(m.name)).map(m=>m.name);
+  if(!names.length)return toast('pehle voice files select karo');
+  names.forEach(n=>{
+    const m=mediaBy(n);
+    S.voice.push({file:n,dur:m&&m.duration?+m.duration.toFixed(2):3,offset:0,vol:1,fadeIn:.1,fadeOut:.2});
+  });
+  selVoiceLib.clear(); drawVoiceLib();
+  autofitClips();
+  tab='audio'; drawTimeline(); drawInspector(); refresh(); save();
+  toast(names.length+' voice clip jud gayi — photos '+fmt(voiceTotal())+' me fit ho gayi');
+};
+/* Saari voice files milkar jitni der bolengi, photos apne aap utni hi der me
+   fit ho jati hain. Har photo ka apna ratio bana rehta hai. */
+function autofitClips(){
+  const vt=voiceTotal(), n=S.clips.length;
+  if(vt<=0||!n)return;
+  const MIN=.3;
+  if(vt<=MIN*n){                       // itni chhoti voice ki sab ko MIN hi milega
+    S.clips.forEach(c=>c.dur=+(vt/n).toFixed(2));
+    return;
+  }
+  const cur=vidLen();
+  const factor=cur>0?vt/cur:0;
+  let sum=0;
+  for(let i=0;i<n-1;i++){
+    const want=factor>0?S.clips[i].dur*factor:vt/n;
+    // aakhri clip ke liye kam se kam MIN bacha kar rakho
+    const cap=vt-sum-MIN*(n-i-1);
+    S.clips[i].dur=+(clamp(want,MIN,Math.max(MIN,cap))).toFixed(2);
+    sum+=S.clips[i].dur;
+  }
+  S.clips[n-1].dur=Math.max(MIN,+(vt-sum).toFixed(2));
+}
+
+/* ---------- clips ---------- */
+function newClip(file){
+  const i=addCount++;
+  return {file,dur:3,motion:DEF_MOTION[i%DEF_MOTION.length],intensity:.6,
+    trans:DEF_TRANS[i%DEF_TRANS.length],transDur:.6,look:'none',fit:'auto',
+    text:'',tstyle:'fadeup',tpos:'bottom',seed:Math.random()*1000};
+}
+$('#btnAddSel').onclick=()=>{
+  const names=sortedImages().filter(m=>sel.has(m.name)).map(m=>m.name);
+  if(!names.length)return toast('pehle photos select karo');
+  const at=selClip>=0?selClip+1:S.clips.length;
+  S.clips.splice(at,0,...names.map(newClip));
+  sel.clear(); selClip=at; tab='clip';
+  autofitClips();
+  drawMedia(); drawTimeline(); drawInspector(); refresh(); save();
+};
+
+/* ---------- audio clips (music + SFX) ---------- */
+function addAudio(m,at){
+  const d=m.duration||10;
+  S.audio.push({file:m.name,start:Math.max(0,+at||0),offset:0,
+    dur:Math.min(d,Math.max(.3,vidLen()-(+at||0))||d),vol:1,fadeIn:.2,fadeOut:.4,loop:false});
+  selAud=S.audio.length-1; tab='audio';
+  drawTimeline(); drawInspector(); save();
+  toast(m.name+' lag gaya '+fmt(at)+' par');
+}
+function spreadFull(i){
+  const a=S.audio[i],m=mediaBy(a.file),T=vidLen();
+  a.start=0; a.offset=0; a.dur=T||a.dur;
+  a.loop=!!(m&&m.duration&&m.duration<T-.05);
+  a.fadeIn=Math.max(a.fadeIn,.8); a.fadeOut=Math.max(a.fadeOut,1.5);
+  drawTimeline(); drawInspector(); save();
+  toast(a.loop?'poori timeline par (loop hoke)':'poori timeline par');
+}
+
+/* ---------- timeline ---------- */
+let dragIdx=-1;
+function drawTimeline(){
+  const row=$('#tlrow');row.innerHTML='';
+  S.clips.forEach((c,i)=>{
+    const d=document.createElement('div');
+    d.className='cl'+(i===selClip&&tab==='clip'?' on':'');d.draggable=true;
+    d.innerHTML='<span class="badge">'+(i+1)+'</span>'+
+      '<img loading="lazy" src="/thumb/'+encodeURIComponent(c.file)+'" onerror="this.style.opacity=0.25">'+
+      '<div class="meta"><span>'+(+c.dur).toFixed(1)+'s</span><span>'+esc(c.motion.slice(0,7))+'</span></div>';
+    d.onclick=()=>{selClip=i;tab='clip';drawTimeline();drawInspector();seekTo(startOf(i)+.05);};
+    d.ondragstart=()=>{dragIdx=i;d.classList.add('drag');};
+    d.ondragend=()=>{d.classList.remove('drag');dragIdx=-1;};
+    d.ondragover=e=>e.preventDefault();
+    d.ondrop=e=>{e.preventDefault();if(dragIdx<0||dragIdx===i)return;
+      const[c2]=S.clips.splice(dragIdx,1);S.clips.splice(i,0,c2);selClip=i;
+      drawTimeline();drawInspector();refresh();save();};
+    row.appendChild(d);
+  });
+  if(!S.clips.length)row.innerHTML='<div class="note">Timeline khaali hai.</div>';
+  drawLanes(); updateSeek();
+}
+function drawLanes(){
+  const box=$('#lanes'); box.innerHTML='';
+  const T=Math.max(vidLen(),.001);
+
+  if(S.voice.length){
+    const vl=document.createElement('div'); vl.className='lane voice';
+    const vt=Math.max(voiceTotal(),.001);
+    S.voice.forEach((v,i)=>{
+      const b=document.createElement('div');
+      b.className='blk voice'+(i===selVoice&&tab==='audio'?' on':'');
+      b.style.left=(clamp(voiceStartOf(i)/vt,0,1)*100)+'%';
+      b.style.width=(clamp(v.dur/vt,.01,1)*100)+'%';
+      b.textContent='🎙 '+v.file;
+      b.onclick=e=>{e.stopPropagation();selVoice=i;tab='audio';drawTimeline();drawInspector();};
+      vl.appendChild(b);
+    });
+    const ph0=document.createElement('div');ph0.className='ph';
+    ph0.style.left=(clamp(t/vt,0,1)*100)+'%';vl.appendChild(ph0);
+    box.appendChild(vl);
+  }
+
+  const lanes=Math.max(1,Math.min(3,S.audio.length?Math.max(...S.audio.map((a,i)=>laneOf(i)))+1:1));
+  for(let L=0;L<lanes;L++){
+    const el=document.createElement('div'); el.className='lane';
+    S.audio.forEach((a,i)=>{
+      if(laneOf(i)!==L)return;
+      const m=mediaBy(a.file);
+      const b=document.createElement('div');
+      b.className='blk'+((m&&m.kind==='sfx')?' sfx':'')+(i===selAud&&tab==='audio'?' on':'');
+      b.style.left=(clamp(a.start/T,0,1)*100)+'%';
+      b.style.width=(clamp(a.dur/T,.01,1)*100)+'%';
+      b.textContent=a.file+(a.loop?' ↻':'');
+      b.onclick=e=>{e.stopPropagation();selAud=i;tab='audio';drawTimeline();drawInspector();};
+      el.appendChild(b);
+    });
+    const ph=document.createElement('div');ph.className='ph';
+    ph.style.left=(clamp(t/T,0,1)*100)+'%';el.appendChild(ph);
+    box.appendChild(el);
+  }
+  if(!S.audio.length && !S.voice.length){
+    box.innerHTML='<div class="lane" style="display:flex;align-items:center"><div style="font-size:11px;color:var(--mut);padding:3px 8px">'+
+      'audio lane khaali — library se gaana ya SFX click karo, ya Audio tab me voice-over lagao</div></div>';
+  }
+}
+function laneOf(i){
+  // overlap hone par alag lane
+  const a=S.audio[i];let lane=0;
+  for(let k=0;k<i;k++){
+    const b=S.audio[k];
+    if(a.start < b.start+b.dur-1e-3 && b.start < a.start+a.dur-1e-3) lane=Math.max(lane,laneOf(k)+1);
+  }
+  return Math.min(lane,2);
+}
+
+/* ---------- inspector ---------- */
+function opts(list,v){return list.map(([k,n])=>'<option value="'+k+'"'+(k===v?' selected':'')+'>'+n+'</option>').join('');}
+document.querySelectorAll('#tabs button').forEach(b=>{
+  b.onclick=()=>{tab=b.dataset.tab;drawTimeline();drawInspector();};
+});
+function syncTabs(){document.querySelectorAll('#tabs button').forEach(b=>
+  b.classList.toggle('on',b.dataset.tab===tab));}
+
+function drawInspector(){
+  syncTabs();
+  const box=$('#insp');
+  if(tab==='clip')      box.innerHTML=clipHtml();
+  else if(tab==='fx')   box.innerHTML=fxHtml();
+  else if(tab==='audio')box.innerHTML=audioHtml();
+  else                  box.innerHTML=textHtml();
+  if(tab==='clip')bindClip(); if(tab==='fx')bindFx();
+  if(tab==='audio')bindAudio(); if(tab==='text')bindText();
+}
+
+/* --- clip tab --- */
+function clipHtml(){
+  const c=S.clips[selClip];
+  if(!c)return '<div class="note">Timeline me kisi clip par click karo.</div>';
+  return '<h3 class="sec">Clip '+(selClip+1)+' — '+esc(c.file)+'</h3>'+
+  '<label class="f"><span>Kitni der (seconds)</span><input type="number" id="i_dur" min="0.3" max="60" step="0.1" value="'+c.dur+'"></label>'+
+  '<label class="f"><span>Camera motion</span><select id="i_motion">'+opts(MOTIONS,c.motion)+'</select></label>'+
+  '<label class="f"><span>Motion kitna tez — '+Math.round(c.intensity*100)+'%</span><input type="range" id="i_int" min="0" max="1" step="0.05" value="'+c.intensity+'"></label>'+
+  '<label class="f"><span>Is clip par transition</span><select id="i_trans">'+opts(TRANS,c.trans)+'</select></label>'+
+  '<label class="f"><span>Transition lambai — '+(+c.transDur).toFixed(2)+'s</span><input type="range" id="i_td" min="0.1" max="1.5" step="0.05" value="'+c.transDur+'"></label>'+
+  '<label class="f"><span>Colour look</span><select id="i_look">'+opts(LOOKS,c.look)+'</select></label>'+
+  '<label class="f"><span>Photo ka fit</span><select id="i_fit">'+opts(FITS,c.fit)+'</select></label>'+
+  '<div class="sep"></div><h3 class="sec">Is clip par caption</h3>'+
+  '<label class="f"><span>Text</span><input type="text" id="i_text" value="'+esc(c.text)+'" placeholder="khaali = kuch nahi"></label>'+
+  '<div class="row"><label class="f"><span>Style</span><select id="i_ts">'+opts(CAPS,c.tstyle)+'</select></label>'+
+  '<label class="f"><span>Jagah</span><select id="i_tp">'+opts([['top','Upar'],['center','Beech'],['bottom','Niche']],c.tpos)+'</select></label></div>'+
+  '<div class="sep"></div>'+
+  '<div class="row"><button class="btn sm" id="i_dup">Copy banao</button>'+
+  '<button class="btn sm" id="i_all">Sab clips par</button></div>'+
+  '<button class="btn sm ghost" id="i_del" style="width:100%;margin-top:8px">Clip hatao</button>';
+}
+function bindClip(){
+  const c=S.clips[selClip];if(!c)return;
+  const bind=(id,k,fn,redraw)=>{const el=$(id);if(!el)return;
+    el.oninput=()=>{c[k]=fn?fn(el.value):el.value;drawTimeline();refresh();save();
+      if(redraw)drawInspector();};};
+  bind('#i_dur','dur',v=>clamp(+v||3,.3,60));
+  bind('#i_motion','motion');bind('#i_int','intensity',v=>+v,true);
+  bind('#i_trans','trans');bind('#i_td','transDur',v=>+v,true);
+  bind('#i_look','look');bind('#i_fit','fit');
+  bind('#i_text','text');bind('#i_ts','tstyle');bind('#i_tp','tpos');
+  $('#i_dup').onclick=()=>{const n=JSON.parse(JSON.stringify(c));n.seed=Math.random()*1000;
+    S.clips.splice(selClip+1,0,n);autofitClips();
+    drawTimeline();drawInspector();refresh();save();};
+  $('#i_all').onclick=()=>{S.clips.forEach(x=>{x.dur=c.dur;x.motion=c.motion;x.intensity=c.intensity;
+    x.trans=c.trans;x.transDur=c.transDur;x.look=c.look;x.fit=c.fit;});
+    autofitClips();
+    drawTimeline();drawInspector();refresh();save();toast('sab clips par laga diya');};
+  $('#i_del').onclick=()=>{S.clips.splice(selClip,1);selClip=Math.min(selClip,S.clips.length-1);
+    autofitClips();drawTimeline();drawInspector();refresh();save();};
+}
+
+/* --- video fx tab --- */
+function sliderRow(id,label,val,min,max,step){
+  return '<label class="f"><span>'+label+' — '+Math.round(val*100)+'%</span>'+
+    '<input type="range" id="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'"></label>';
+}
+function fxHtml(){
+  const f=S.fxg;
+  const tog=(id,k,name)=>'<label class="chk"><input type="checkbox" id="'+id+'" data-fx="'+k+'"'+(f[k]?' checked':'')+'> '+name+'</label>';
+  return '<h3 class="sec">Poori video par</h3>'+
+    tog('g_grain','grain','Film grain')+
+    tog('g_vig','vignette','Vignette')+
+    tog('g_lb','letterbox','Cinema bars (2.39:1)')+
+    tog('g_fade','fade','Shuru/ant me fade')+
+    '<div class="sep"></div><h3 class="sec">Atmosphere</h3>'+
+    tog('g_leaks','leaks','Light leaks')+
+    (f.leaks?sliderRow('g_leakAmt','Leak strength',f.leakAmt,0,1,.05):'')+
+    tog('g_lights','lights','Bokeh lights')+
+    (f.lights?sliderRow('g_lightAmt','Lights strength',f.lightAmt,0,1,.05):'')+
+    tog('g_dust','dust','Dust specks')+
+    (f.dust?sliderRow('g_dustAmt','Dust strength',f.dustAmt,0,1,.05):'')+
+    tog('g_sparkle','sparkle','Sparkle / twinkle')+
+    (f.sparkle?sliderRow('g_sparkAmt','Sparkle strength',f.sparkAmt,0,1,.05):'')+
+    '<div class="sep"></div><h3 class="sec">Beat pulse</h3>'+
+    '<label class="f"><span>BPM (0 = band)</span><input type="number" id="g_bpm" min="0" max="220" step="1" value="'+(f.bpm||0)+'"></label>'+
+    (f.bpm>0?sliderRow('g_pulse','Pulse strength',f.pulse,0,1,.05)+
+      '<label class="f"><span>Phase (seconds)</span><input type="number" id="g_phase" min="0" max="10" step="0.05" value="'+(f.phase||0)+'"></label>':'')+
+    '<div class="note">Atmosphere layers preview me nahi, sirf frame aur final export me dikhte hain '+
+    '(480p preview me speed ke liye band rehte hain).</div>';
+}
+function bindFx(){
+  document.querySelectorAll('[data-fx]').forEach(el=>{
+    el.onchange=()=>{S.fxg[el.dataset.fx]=el.checked;drawInspector();refresh();save();};});
+  const sl=(id,k)=>{const el=$(id);if(el)el.oninput=()=>{S.fxg[k]=+el.value;refresh();save();
+    const s=el.previousElementSibling;if(s)s.textContent=s.textContent.replace(/—.*/,'— '+Math.round(el.value*100)+'%');};};
+  sl('#g_leakAmt','leakAmt');sl('#g_lightAmt','lightAmt');
+  sl('#g_dustAmt','dustAmt');sl('#g_sparkAmt','sparkAmt');sl('#g_pulse','pulse');
+  const b=$('#g_bpm');if(b)b.onchange=()=>{S.fxg.bpm=clamp(+b.value||0,0,220);drawInspector();refresh();save();};
+  const ph=$('#g_phase');if(ph)ph.oninput=()=>{S.fxg.phase=+ph.value||0;refresh();save();};
+}
+
+/* --- audio tab --- */
+function audioHtml(){
+  let h='<h3 class="sec">Voice over sequence</h3>'+voiceHtml()+'<div class="sep"></div>'+
+        '<h3 class="sec">Music &amp; SFX timeline</h3>';
+  if(!S.audio.length) h+='<div class="note">Left library me gaana ya SFX par click karo — playhead par lag jayega.</div>';
+  S.audio.forEach((a,i)=>{
+    const m=mediaBy(a.file),full=m?m.duration:0;
+    h+='<div class="card'+(i===selAud?' on':'')+'" data-aud="'+i+'">'+
+      '<div class="hd"><b>'+esc(a.file)+'</b>'+
+      '<button class="btn sm ghost" data-adel="'+i+'">×</button></div>';
+    if(i===selAud){
+      h+='<label class="f"><span>Kab se shuru (sec)</span><input type="number" data-ak="start" min="0" step="0.1" value="'+a.start+'"></label>'+
+      '<label class="f"><span>Kitni der bajega (sec)</span><input type="number" data-ak="dur" min="0.1" step="0.1" value="'+(+a.dur).toFixed(2)+'"></label>'+
+      '<label class="f"><span>Gaane ke andar se kahan se (sec)'+(full?' / '+full.toFixed(1):'')+'</span>'+
+        '<input type="number" data-ak="offset" min="0" step="0.1" value="'+a.offset+'"></label>'+
+      '<label class="f"><span>Volume — '+Math.round(a.vol*100)+'%</span><input type="range" data-ak="vol" min="0" max="2" step="0.05" value="'+a.vol+'"></label>'+
+      '<div class="row"><label class="f"><span>Fade in</span><input type="number" data-ak="fadeIn" min="0" step="0.1" value="'+a.fadeIn+'"></label>'+
+      '<label class="f"><span>Fade out</span><input type="number" data-ak="fadeOut" min="0" step="0.1" value="'+a.fadeOut+'"></label></div>'+
+      '<label class="chk"><input type="checkbox" data-ak="loop"'+(a.loop?' checked':'')+'> Chhota ho to loop karo</label>'+
+      '<div class="row" style="margin-top:8px">'+
+      '<button class="btn sm" data-afull="'+i+'">Poori timeline par</button>'+
+      '<button class="btn sm ghost" data-ahere="'+i+'">Playhead par lao</button></div>';
+    }
+    h+='</div>';
+  });
+  h+='<div class="sep"></div><h3 class="sec">Audio effects (music/SFX par — voice saaf rehti hai)</h3>';
+  AFX.forEach(([k,name])=>{
+    const f=S.afx[k];
+    h+='<label class="chk"><input type="checkbox" data-afxon="'+k+'"'+(f.on?' checked':'')+'> '+name+'</label>';
+    if(f.on)h+='<input type="range" data-afxamt="'+k+'" min="0" max="1" step="0.05" value="'+f.amt+'" style="margin-bottom:6px">';
+  });
+  const p=S.afx.pitch;
+  h+='<label class="chk"><input type="checkbox" data-afxon="pitch"'+(p.on?' checked':'')+'> Pitch shift</label>';
+  if(p.on)h+='<label class="f" style="margin-top:0"><span>'+(p.amt>0?'+':'')+(p.amt*6).toFixed(1)+' semitone</span>'+
+    '<input type="range" data-afxamt="pitch" min="-1" max="1" step="0.05" value="'+p.amt+'"></label>';
+  return h;
+}
+function voiceHtml(){
+  if(!S.voice.length){
+    return '<div class="note">Left library ke "Voice over" section me files daalo, '+
+      'select karke "Voice sequence me daalo" dabao — photos ki tarah date ke hisaab se '+
+      'ek ke baad ek lag jayengi, aur bolti rahengi jitni der tak sab voice files milkar chalengi. '+
+      'Jitni der voice bolegi, photos apne aap utni hi lambi ho jayengi.</div>';
+  }
+  let h='<div class="note">Kul voice lambai: '+fmt(voiceTotal())+' — photos isi me fit hain.</div>';
+  S.voice.forEach((v,i)=>{
+    const m=mediaBy(v.file), full=m?m.duration:0;
+    h+='<div class="card'+(i===selVoice?' on':'')+'" data-vseq="'+i+'" draggable="true">'+
+      '<div class="hd"><span class="pill sm">'+(i+1)+'</span><b>'+esc(v.file)+'</b>'+
+      '<button class="btn sm ghost" data-vdel="'+i+'">×</button></div>';
+    if(i===selVoice){
+      h+='<label class="f"><span>Kitni der bolegi (sec)</span><input type="number" data-vk="dur" min="0.1" step="0.1" value="'+(+v.dur).toFixed(2)+'"></label>'+
+      '<label class="f"><span>File ke andar se kahan se (sec)'+(full?' / '+full.toFixed(1):'')+'</span>'+
+        '<input type="number" data-vk="offset" min="0" step="0.1" value="'+v.offset+'"></label>'+
+      '<label class="f"><span>Volume — '+Math.round(v.vol*100)+'%</span><input type="range" data-vk="vol" min="0" max="2" step="0.05" value="'+v.vol+'"></label>'+
+      '<div class="row"><label class="f"><span>Fade in</span><input type="number" data-vk="fadeIn" min="0" step="0.1" value="'+v.fadeIn+'"></label>'+
+      '<label class="f"><span>Fade out</span><input type="number" data-vk="fadeOut" min="0" step="0.1" value="'+v.fadeOut+'"></label></div>';
+    }
+    h+='</div>';
+  });
+  return h;
+}
+let dragVoiceIdx=-1;
+function bindAudio(){
+  document.querySelectorAll('[data-vseq]').forEach(el=>{
+    el.onclick=e=>{if(e.target.closest('input,button,label'))return;
+      selVoice=+el.dataset.vseq;drawTimeline();drawInspector();};
+    el.ondragstart=()=>{dragVoiceIdx=+el.dataset.vseq;el.classList.add('drag');};
+    el.ondragend=()=>{el.classList.remove('drag');dragVoiceIdx=-1;};
+    el.ondragover=e=>e.preventDefault();
+    el.ondrop=e=>{e.preventDefault();const i=+el.dataset.vseq;
+      if(dragVoiceIdx<0||dragVoiceIdx===i)return;
+      const[v2]=S.voice.splice(dragVoiceIdx,1);S.voice.splice(i,0,v2);
+      selVoice=i;drawTimeline();drawInspector();refresh();save();};
+  });
+  document.querySelectorAll('[data-vdel]').forEach(el=>{
+    el.onclick=()=>{S.voice.splice(+el.dataset.vdel,1);selVoice=Math.min(selVoice,S.voice.length-1);
+      autofitClips();drawTimeline();drawInspector();refresh();save();};});
+  const vv=S.voice[selVoice];
+  if(vv)document.querySelectorAll('[data-vk]').forEach(el=>{
+    const k=el.dataset.vk;
+    const apply=()=>{
+      vv[k]=el.type==='checkbox'?el.checked:(+el.value||0);
+      if(k==='dur'){vv.dur=Math.max(.1,vv.dur);autofitClips();}
+      drawTimeline();refresh();save();
+      if(k==='vol'){const s=el.previousElementSibling;if(s)s.textContent='Volume — '+Math.round(vv.vol*100)+'%';}
+    };
+    el.oninput=apply; el.onchange=apply;
+  });
+
+  document.querySelectorAll('[data-aud]').forEach(el=>{
+    el.onclick=e=>{if(e.target.closest('input,button,label'))return;
+      selAud=+el.dataset.aud;drawTimeline();drawInspector();};});
+  document.querySelectorAll('[data-adel]').forEach(el=>{
+    el.onclick=()=>{S.audio.splice(+el.dataset.adel,1);selAud=Math.min(selAud,S.audio.length-1);
+      drawTimeline();drawInspector();save();};});
+  const a=S.audio[selAud];
+  if(a) document.querySelectorAll('[data-ak]').forEach(el=>{
+    const k=el.dataset.ak;
+    const apply=()=>{
+      a[k]=el.type==='checkbox'?el.checked:(+el.value||0);
+      if(k==='start')a.start=Math.max(0,a.start);
+      if(k==='dur')a.dur=Math.max(.1,a.dur);
+      drawTimeline();save();
+      if(k==='vol'){const s=el.previousElementSibling;
+        if(s)s.textContent='Volume — '+Math.round(a.vol*100)+'%';}
+    };
+    el.oninput=apply; el.onchange=apply;
+  });
+  document.querySelectorAll('[data-afull]').forEach(el=>el.onclick=()=>spreadFull(+el.dataset.afull));
+  document.querySelectorAll('[data-ahere]').forEach(el=>{
+    el.onclick=()=>{S.audio[+el.dataset.ahere].start=+t.toFixed(2);drawTimeline();drawInspector();save();};});
+  document.querySelectorAll('[data-afxon]').forEach(el=>{
+    el.onchange=()=>{S.afx[el.dataset.afxon].on=el.checked;drawInspector();save();};});
+  document.querySelectorAll('[data-afxamt]').forEach(el=>{
+    el.oninput=()=>{S.afx[el.dataset.afxamt].amt=+el.value;save();
+      if(el.dataset.afxamt==='pitch'){const s=el.previousElementSibling;
+        if(s)s.textContent=(el.value>0?'+':'')+(el.value*6).toFixed(1)+' semitone';}};});
+}
+
+/* --- text / overlay tab --- */
+function textHtml(){
+  let h='<div class="row"><button class="btn sm" id="ov_add">+ Text</button>'+
+    '<button class="btn sm" id="ov_emo">+ Emoji</button></div>';
+  if(!S.overlays.length)h+='<div class="note">Ye text/emoji poori video par kahin bhi rakh sakte ho, '+
+    'aur chaho to sirf kuch seconds ke liye dikha sakte ho.</div>';
+  S.overlays.forEach((o,i)=>{
+    h+='<div class="card'+(i===selOv?' on':'')+'" data-ov="'+i+'">'+
+      '<div class="hd"><b>'+esc(o.text||'(khaali)')+'</b>'+
+      '<button class="btn sm ghost" data-ovdel="'+i+'">×</button></div>';
+    if(i===selOv){
+      h+='<label class="f"><span>Text</span><input type="text" data-ok="text" value="'+esc(o.text)+'"></label>'+
+      '<div class="row"><label class="f"><span>X — '+Math.round(o.x*100)+'%</span>'+
+      '<input type="range" data-ok="x" min="0.02" max="0.98" step="0.01" value="'+o.x+'"></label>'+
+      '<label class="f"><span>Y — '+Math.round(o.y*100)+'%</span>'+
+      '<input type="range" data-ok="y" min="0.02" max="0.98" step="0.01" value="'+o.y+'"></label></div>'+
+      '<label class="f"><span>Size — '+Math.round(o.size*100)+'%</span>'+
+      '<input type="range" data-ok="size" min="0.02" max="0.3" step="0.005" value="'+o.size+'"></label>'+
+      (o.type==='emoji'?'':'<label class="f"><span>Colour</span><input type="color" data-ok="color" value="'+(o.color||'#ffffff')+'"></label>')+
+      '<label class="chk"><input type="checkbox" data-ovtime="'+i+'"'+(o.t0!=null?' checked':'')+'> Sirf kuch der ke liye</label>'+
+      (o.t0!=null?'<div class="row"><label class="f"><span>Se (sec)</span>'+
+        '<input type="number" data-ok="t0" min="0" step="0.1" value="'+o.t0+'"></label>'+
+        '<label class="f"><span>Tak (sec)</span>'+
+        '<input type="number" data-ok="t1" min="0" step="0.1" value="'+o.t1+'"></label></div>':'');
+    }
+    h+='</div>';
+  });
+  return h;
+}
+function bindText(){
+  $('#ov_add').onclick=()=>{S.overlays.push({type:'text',text:'Naya text',x:.5,y:.5,size:.08,color:'#ffffff'});
+    selOv=S.overlays.length-1;drawInspector();refresh();save();};
+  $('#ov_emo').onclick=()=>{S.overlays.push({type:'emoji',text:'🔥',x:.5,y:.5,size:.12});
+    selOv=S.overlays.length-1;drawInspector();refresh();save();};
+  document.querySelectorAll('[data-ov]').forEach(el=>{
+    el.onclick=e=>{if(e.target.closest('input,button,label'))return;
+      selOv=+el.dataset.ov;drawInspector();};});
+  document.querySelectorAll('[data-ovdel]').forEach(el=>{
+    el.onclick=()=>{S.overlays.splice(+el.dataset.ovdel,1);selOv=Math.min(selOv,S.overlays.length-1);
+      drawInspector();refresh();save();};});
+  document.querySelectorAll('[data-ovtime]').forEach(el=>{
+    el.onchange=()=>{const o=S.overlays[+el.dataset.ovtime];
+      if(el.checked){o.t0=+t.toFixed(1);o.t1=+(t+3).toFixed(1);}else{delete o.t0;delete o.t1;}
+      drawInspector();refresh();save();};});
+  const o=S.overlays[selOv];
+  if(o)document.querySelectorAll('[data-ok]').forEach(el=>{
+    el.oninput=()=>{const k=el.dataset.ok;
+      o[k]=(el.type==='range'||el.type==='number')?+el.value:el.value;
+      refresh();save();
+      if(el.type==='range'){const s=el.previousElementSibling;
+        if(s)s.textContent=s.textContent.replace(/—.*/,'— '+Math.round(el.value*100)+'%');}
+      if(k==='text'){const b=el.closest('.card').querySelector('.hd b');if(b)b.textContent=o.text||'(khaali)';}};
+  });
+}
+
+/* ---------- preview (sirf MP4 — koi photo frame nahi) ---------- */
+/* refresh() ka matlab ab itna hai: preview purana ho gaya, stage dobara likho. */
+function refresh(){previewStale=true;updateStage();updateSeek();}
+
+function updateStage(){
+  const v=$('#vid'), hasClips=S.clips.length>0;
+  $('#empty').hidden=hasClips;
+  $('#noprev').hidden=!(hasClips&&!previewUrl);
+  v.hidden=!(hasClips&&previewUrl);
+  $('#stale').hidden=!(hasClips&&previewUrl&&previewStale);
+  if(!hasClips&&previewUrl){v.pause();}
+  $('#btnPlay').disabled=!previewUrl;
+}
+function loadPreview(url){
+  const v=$('#vid');
+  previewUrl=url; previewStale=false;
+  v.src=url; v.load();
+  updateStage();
+  v.play().catch(()=>{});
+}
+/* video khud chale to playhead saath me chale */
+function bindVideo(){
+  const v=$('#vid');
+  v.ontimeupdate=()=>{if(seeking)return;t=v.currentTime||0;
+    S.clips.forEach((c,i)=>{if(startOf(i)<=t+1e-6)selClip=i;});
+    updateSeek();markPlayhead();};
+  v.onplay=()=>$('#btnPlay').textContent='❚❚ Rok do';
+  v.onpause=()=>$('#btnPlay').textContent='▶︎ Chalao';
+  v.onended=()=>$('#btnPlay').textContent='▶︎ Chalao';
+}
+/* preview me us waqt par pahunch jao */
+function seekTo(sec){
+  t=Math.max(0,sec);
+  const v=$('#vid');
+  if(previewUrl&&isFinite(v.duration)&&v.duration>0)
+    v.currentTime=Math.min(t,Math.max(0,v.duration-.05));
+  updateSeek();markPlayhead();
+}
+function markPlayhead(){
+  const T=vidLen(),box=$('#lanes');
+  if(box)box.querySelectorAll('.ph').forEach(p=>
+    p.style.left=(clamp(t/Math.max(T,.001),0,1)*100)+'%');
+}
+function updateSeek(){
+  const T=vidLen();
+  $('#seek').value=T>0?Math.round(clamp(t/T,0,1)*1000):0;
+  $('#tlabel').textContent=fmt(t)+' / '+fmt(T);
+  markPlayhead();
+}
+let seekRelease=null;
+function endSeek(){clearTimeout(seekRelease);seeking=false;}
+$('#seek').oninput=e=>{
+  seeking=true;
+  clearTimeout(seekRelease);
+  seekRelease=setTimeout(endSeek,400);   /* release event miss ho jaye to bhi atke na */
+  t=vidLen()*e.target.value/1000;
+  S.clips.forEach((c,i)=>{if(startOf(i)<=t+1e-6)selClip=i;});
+  seekTo(t); drawTimeline();
+};
+['pointerup','mouseup','touchend','change','blur'].forEach(ev=>
+  $('#seek').addEventListener(ev,endSeek));
+$('#btnPlay').onclick=()=>{const v=$('#vid');
+  if(!previewUrl)return toast('pehle "Preview banao" dabao — yahan sirf MP4 chalta hai');
+  if(v.paused)v.play().catch(()=>{});else v.pause();};
+$('#btnMakePrev').onclick=()=>startJob('preview');
+$('#btnPrev').onclick=()=>{if(selClip>0){selClip--;tab='clip';seekTo(startOf(selClip)+.05);drawTimeline();drawInspector();}};
+$('#btnNext').onclick=()=>{if(selClip<S.clips.length-1){selClip++;tab='clip';seekTo(startOf(selClip)+.05);drawTimeline();drawInspector();}};
+
+$('#ratio').onchange=e=>{S.ratio=e.target.value;refresh();save();};
+$('#quality').onchange=e=>{S.quality=+e.target.value;save();};
+$('#fps').onchange=e=>{S.fps=+e.target.value;save();};
+$('#btnFolder').onclick=()=>fetch('/api/openfolder?which=exports');
+
+let saveTimer=null;
+function save(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{
+  jpost('/api/save',{name:curProject,project:project()}).catch(()=>{});},700);}
+
+/* ---------- render jobs ---------- */
+async function startJob(kind){
+  if(!S.clips.length)return toast('pehle timeline me photos daalo');
+  if(busy)return toast('ek kaam already chal raha hai');
+  const j=await jpost(kind==='preview'?'/api/preview':'/api/export',{project:project()});
+  if(!j.ok)return toast(j.error||'shuru nahi hua');
+  busy=true;$('#btnCancel').hidden=false;$('#dl').hidden=true;$('#busy').classList.add('on');
+  $('#busy').textContent=kind==='preview'?'preview ban raha hai…':'export ho raha hai…';
+  poll(kind);
+}
+async function poll(kind){
+  let st;
+  while(true){
+    await new Promise(r=>setTimeout(r,450));
+    try{st=await jget('/api/progress');}catch(e){continue;}
+    $('#progBar').style.width=(st.progress*100).toFixed(1)+'%';
+    $('#progText').textContent=Math.round(st.progress*100)+'% • '+st.elapsed+'s';
+    $('#statPill').textContent=st.kind+' — '+st.status;
+    if(st.status!=='running')break;
+  }
+  busy=false;$('#btnCancel').hidden=true;$('#busy').classList.remove('on');
+  if(st.status==='done'){
+    const r=st.result;
+    $('#progText').textContent=r.seconds+'s • '+(r.size/1048576).toFixed(1)+' MB';
+    if(kind==='preview'){
+      loadPreview(r.url);
+      toast('preview tayyar — '+r.seconds+'s');
+    }else{
+      $('#dl').href=r.url;$('#dl').hidden=false;
+      toast('Export ho gaya '+r.seconds+'s me → '+r.path,6000);
+    }
+  }else if(st.status==='error'){
+    toast('Gadbad: '+(st.message||'').split('\n')[0],8000);$('#progText').textContent='fail';
+  }else $('#progText').textContent='';
+  $('#statPill').textContent='tayyar';
+}
+$('#btnPreview').onclick=()=>startJob('preview');
+$('#btnExport').onclick=()=>startJob('export');
+$('#btnCancel').onclick=()=>jpost('/api/cancel',{});
+
+document.addEventListener('keydown',e=>{
+  if(/input|select|textarea/i.test(e.target.tagName))return;
+  if(e.key==='ArrowRight'){$('#btnNext').click();e.preventDefault();}
+  if(e.key==='ArrowLeft'){$('#btnPrev').click();e.preventDefault();}
+  if(e.key==='Delete'&&tab==='clip'&&S.clips[selClip]){$('#i_del')&&$('#i_del').click();}
+});
+</script>
+</body>
+</html>
